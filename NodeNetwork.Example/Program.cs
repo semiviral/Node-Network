@@ -13,13 +13,16 @@ using Newtonsoft.Json;
 
 namespace NodeNetwork.Example {
     internal class Program {
+        #region MEMBERS
+
         private static NodeNetwork<string> _network;
 
-        private static readonly char[] _AcceptableChars = {'-', '.', ';', ':', '!', '?', '(', ')', ' '};
-        private static readonly string[] _SplitBy = {".", ";", ":", "!", "?", "(", ")", ",", " "};
-        private static readonly string[] _SpecifiedIllegalOutputStrings = {" "};
+        private static readonly Regex _RegexReplaceIllegal = new Regex(@"[^A-Za-z\.\?\!\;\:\(\)\[\]\-\ ]+");
+        private static readonly string[] _SplitBy = {".", "?", "!", ":", ";", "(", ")", "[", "]", "\n", "\r"};
 
         private static readonly Stopwatch _Stopwatch = new Stopwatch();
+
+        #endregion
 
         private static void Main(string[] args) {
             if (File.Exists(@"config.json"))
@@ -36,31 +39,36 @@ namespace NodeNetwork.Example {
 
             Console.Write("Reading text from training file: ");
             _Stopwatch.Start();
-            string rawInput = File.ReadAllText($"{AppContext.BaseDirectory}\\TestFile.txt");
+            string rawInput = File.ReadAllText($"{AppContext.BaseDirectory}\\TrainingFile.txt");
             Console.WriteLine($"{_Stopwatch.ElapsedMilliseconds}ms");
             _Stopwatch.Reset();
 
             Console.Write("Initial refactoring pass: ");
             _Stopwatch.Start();
-            string refactoredInput = rawInput.Refactor(_AcceptableChars);
+            string refactoredInput = _RegexReplaceIllegal.Replace(rawInput, " ");
             Console.WriteLine($"{_Stopwatch.ElapsedMilliseconds}ms");
             _Stopwatch.Reset();
 
             Console.Write("Enumeration split pass: ");
             _Stopwatch.Start();
-            IEnumerable<string> enumerable = refactoredInput.ToEnumerable(_SplitBy);
+            IEnumerable<string> enumerable = rawInput.ToEnumerable(_SplitBy);
             Console.WriteLine($"{_Stopwatch.ElapsedMilliseconds}ms");
             _Stopwatch.Reset();
 
             Console.Write("Final cleansing pass: ");
             _Stopwatch.Start();
-            List<string> finalList = enumerable.CleanseEnumerableToList(_SpecifiedIllegalOutputStrings);
+            IEnumerable<string> cleansedEnumerable = enumerable.CleanseConsecutiveSpaces();
             Console.WriteLine($"{_Stopwatch.ElapsedMilliseconds}ms");
             _Stopwatch.Reset();
 
             Console.WriteLine("Processing input list to create node network...");
             _Stopwatch.Start();
-            _network.ProcessInput(finalList);
+
+            Stack<string> processingStack = new Stack<string>(cleansedEnumerable);
+
+            while (processingStack.Count > 0)
+                _network.ProcessInput(processingStack.Pop().Split(" "));
+
             Console.WriteLine($"Creation of node network completed: {_Stopwatch.ElapsedMilliseconds}ms");
             _Stopwatch.Reset();
 
@@ -76,30 +84,6 @@ namespace NodeNetwork.Example {
 
     public static class Extensions {
         /// <summary>
-        ///     Cleans a string of any characters that are not explicitly allowed,
-        ///     and
-        /// </summary>
-        /// <param name="input"></param>
-        /// <param name="specialSeperationChars">characters to seperate by spaces</param>
-        /// <returns></returns>
-        public static string Refactor(this string input, char[] specialSeperationChars) {
-            StringBuilder refactoredString = new StringBuilder();
-            Regex alphanumericCheck = new Regex("^[a-zA-Z0-9]*$", RegexOptions.Compiled);
-
-            for (int i = 0; i < input.Length; i++)
-                if (!specialSeperationChars.Contains(input[i])) {
-                    if (!alphanumericCheck.IsMatch(input[i].ToString()))
-                        continue;
-
-                    refactoredString.Append(input[i].ToString().ToLower());
-                } else {
-                    refactoredString.Append($" {input[i].ToString().ToLower()} ");
-                }
-
-            return refactoredString.ToString();
-        }
-
-        /// <summary>
         ///     Seperates a string into a list of strings by deliminators
         /// </summary>
         /// <param name="input"></param>
@@ -110,16 +94,38 @@ namespace NodeNetwork.Example {
 
             for (int i = 0; i < input.Length; i++)
                 if (deliminators.Contains(input[i].ToString())) {
-                    yield return input.Substring(lastDeliminatorIndex, i - lastDeliminatorIndex);
+                    // this will retrieve the word from the input, and append a newline character
+                    string returnableString = $"{input.Substring(lastDeliminatorIndex, i - lastDeliminatorIndex)}";
+
+                    if (string.IsNullOrEmpty(returnableString))
+                        continue;
+
+                    yield return returnableString;
 
                     lastDeliminatorIndex = i;
                 }
         }
 
-        public static List<string> CleanseEnumerableToList(this IEnumerable<string> enumerable, string[] illegalStrings) {
-            List<string> output = enumerable.ToList();
-            output.RemoveAll(illegalStrings.Contains);
-            return output;
+        public static IEnumerable<string> CleanseConsecutiveSpaces(this IEnumerable<string> enumerable) {
+            foreach (string str in enumerable) {
+                bool charWasSpace = false;
+
+                StringBuilder builder = new StringBuilder();
+
+                foreach (char character in str)
+                    if (character.Equals(' ')) {
+                        if (charWasSpace)
+                            continue;
+
+                        builder.Append(character);
+                        charWasSpace = true;
+                    } else {
+                        builder.Append(character);
+                        charWasSpace = false;
+                    }
+
+                yield return builder.ToString().Trim();
+            }
         }
     }
 }

@@ -8,12 +8,16 @@ using System.Linq;
 
 namespace NodeNetwork {
     public class NodeNetwork<T> where T : class {
+        #region MEMBERS
+
         public List<Node<T>> Nodes { get; } = new List<Node<T>>();
         public List<NodeLink<T>> Links { get; } = new List<NodeLink<T>>();
 
         public int MaxIndex {
             get { return Nodes.Count == 0 ? 0 : Nodes.Max(neuron => neuron.Index) + 1; }
         }
+
+        #endregion
 
         public Node<T> GetNeuron(T value) {
             return Nodes.SingleOrDefault(neuron => neuron.Value.Equals(value));
@@ -38,17 +42,15 @@ namespace NodeNetwork {
         ///     input will be abstracted in order of bottom-to-
         ///     top
         /// </param>
-        public void ProcessInput(List<T> inputs) {
-            int count = inputs.Count;
-
-            Console.Write($"Processing nodes...\n{count}");
+        public void ProcessInput(T[] inputs) {
+            Console.Write($"Processing {inputs.Length} nodes... \n {string.Join(" ", inputs.ToList())}");
             int cursorFromTop = Console.CursorTop;
 
             foreach (T input in inputs)
                 if (Nodes.All(neuron => !neuron.Value.Equals(input)))
                     Nodes.Add(new Node<T>(MaxIndex, input));
 
-            for (int i = 0; i < count - 1; i++) {
+            for (int i = 0; i < inputs.Length - 1; i++) {
                 List<NodeLink<T>> links = GetLinks(inputs[i]).ToList();
 
                 if (!links.Any() || !links.Any(link => link.Output.Value.Equals(inputs[i + 1])))
@@ -58,11 +60,11 @@ namespace NodeNetwork {
                     link.ProbabilityPass(inputs[i + 1]);
 
                 Console.SetCursorPosition(0, cursorFromTop);
-                Console.Write($"{count - i}");
+                Console.Write($"{inputs.Length - i}");
             }
 
 
-            Console.WriteLine($"Finished processing {inputs.Count} nodes.");
+            Console.WriteLine("completed.");
         }
 
         public T DetermineOutput(T input) {
