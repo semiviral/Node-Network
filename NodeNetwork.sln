@@ -7,6 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		UnitTest\config.json = UnitTest\config.json
 		NodeNetwork.Example\bin\Debug\netcoreapp2.0\TrainingFile.txt = NodeNetwork.Example\bin\Debug\netcoreapp2.0\TrainingFile.txt
+		NodeNetwork.Example\bin\Debug\netcoreapp2.0\TrainingFile2.txt = NodeNetwork.Example\bin\Debug\netcoreapp2.0\TrainingFile2.txt
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NodeNetwork.Example", "NodeNetwork.Example\NodeNetwork.Example.csproj", "{CD9C0C3C-A376-4D6A-BD87-9FE1AD36B98D}"

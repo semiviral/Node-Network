@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -12,15 +11,10 @@ using Newtonsoft.Json;
 #endregion
 
 namespace NodeNetwork.Example {
-    internal class Program {
+    public class Program {
         #region MEMBERS
 
         private static NodeNetwork<string> _network;
-
-        //private static readonly Regex _RegexIllegal = new Regex(@"[^A-Za-z0-9\.\?\!\;\:\(\)\[\]\-\'\r\n\’\ ]+", RegexOptions.Compiled);
-        //private static readonly Regex _RegexSymbols = new Regex(@"[\.\?\!\:\;\(\)\[\]]+", RegexOptions.Compiled);
-
-        private static readonly Stopwatch _Stopwatch = new Stopwatch();
 
         #endregion
 
@@ -35,41 +29,44 @@ namespace NodeNetwork.Example {
 
         private static void WriteConfig() {
             _network = new NodeNetwork<string>();
-            _Stopwatch.Reset();
+            Benchmark.Timer.Reset();
 
             Console.Write("Reading text from training file: ");
-            _Stopwatch.Start();
+            Benchmark.Timer.Start();
             string rawInput = File.ReadAllText($"{AppContext.BaseDirectory}\\TrainingFile.txt");
-            Console.WriteLine($"{_Stopwatch.ElapsedMilliseconds}ms");
-            _Stopwatch.Reset();
+            Console.WriteLine($"{Benchmark.Timer.ElapsedMilliseconds}ms");
+            Benchmark.Timer.Reset();
 
             Console.Write("Symbol to new-line replacement pass: ");
-            _Stopwatch.Start();
+            Benchmark.Timer.Start();
             string replacePunctuation = rawInput.OutstandSymbols();
-            Console.WriteLine($"{_Stopwatch.ElapsedMilliseconds}ms");
-            _Stopwatch.Reset();
+            Console.WriteLine($"{Benchmark.Timer.ElapsedMilliseconds}ms");
+            Benchmark.Timer.Reset();
 
             Console.Write("New-line split pass: ");
-            _Stopwatch.Start();
+            Benchmark.Timer.Start();
             List<string> splitByNewLines = replacePunctuation.Split(' ', '\r', '\n').ToList();
             splitByNewLines.ToList().RemoveAll(string.IsNullOrEmpty);
-            Console.WriteLine($"{_Stopwatch.ElapsedMilliseconds}ms");
-            _Stopwatch.Reset();
+            Console.WriteLine($"{Benchmark.Timer.ElapsedMilliseconds}ms");
+            Benchmark.Timer.Reset();
 
             Console.WriteLine("Processing input list to create node network...");
-            _Stopwatch.Start();
+            Benchmark.Timer.Start();
             _network.ProcessInput(splitByNewLines.ToArray());
-            Console.WriteLine($"Creation of node network completed: {_Stopwatch.ElapsedMilliseconds}ms");
-            _Stopwatch.Reset();
+            Console.WriteLine($"Creation of node network completed: {Benchmark.Timer.ElapsedMilliseconds}ms");
+            Benchmark.Timer.Reset();
 
             Console.Write("Writing serialized network to file: ");
-            _Stopwatch.Start();
+            Benchmark.Timer.Start();
             File.WriteAllText("config.json", JsonConvert.SerializeObject(_network));
-            Console.WriteLine($"{_Stopwatch.ElapsedMilliseconds}ms");
-            _Stopwatch.Reset();
+            Console.WriteLine($"{Benchmark.Timer.ElapsedMilliseconds}ms");
+            Benchmark.Timer.Reset();
 
             Console.WriteLine("All processes complete.");
         }
+
+        //private static readonly Regex _RegexIllegal = new Regex(@"[^A-Za-z0-9\.\?\!\;\:\(\)\[\]\-\'\r\n\’\ ]+", RegexOptions.Compiled);
+        //private static readonly Regex _RegexSymbols = new Regex(@"[\.\?\!\:\;\(\)\[\]]+", RegexOptions.Compiled);
     }
 
     public static class Extensions {

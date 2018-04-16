@@ -2,11 +2,20 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 #endregion
 
 namespace NodeNetwork {
+    public static class Benchmark {
+        #region MEMBERS
+
+        public static readonly Stopwatch Timer = new Stopwatch();
+
+        #endregion
+    }
+
     public class NodeNetwork<T> where T : class {
         #region MEMBERS
 
@@ -56,7 +65,8 @@ namespace NodeNetwork {
                     Links.Add(new NodeLink<T>(GetNeuron(inputs[i]), GetNeuron(inputs[i + 1])));
 
                 foreach (NodeLink<T> link in links)
-                    link.ProbabilityPass(inputs[i + 1]);
+                    if (link.Output != GetNeuron(inputs[i + 1]))
+                        link.ProbabilityPass(inputs[i + 1]);
             }
 
             Console.WriteLine("completed.");
