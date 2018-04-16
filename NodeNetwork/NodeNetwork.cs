@@ -43,17 +43,13 @@ namespace NodeNetwork {
         ///     top
         /// </param>
         public void ProcessInput(T[] inputs) {
-            int count = inputs.Length;
-            int fromTop = Console.CursorTop;
-            int fromLeft = Console.CursorLeft;
-
-            Console.Write($"Processing {count} nodes... ");
+            Console.Write($"Processing {inputs.Length} nodes... ");
 
             foreach (T input in inputs)
                 if (Nodes.All(neuron => !neuron.Value.Equals(input)))
                     Nodes.Add(new Node<T>(MaxIndex, input));
 
-            for (int i = 0; i < count - 1; i++) {
+            for (int i = 0; i < inputs.Length - 1; i++) {
                 List<NodeLink<T>> links = GetLinks(inputs[i]).ToList();
 
                 if (!links.Any() || !links.Any(link => link.Output.Value.Equals(inputs[i + 1])))
@@ -61,9 +57,6 @@ namespace NodeNetwork {
 
                 foreach (NodeLink<T> link in links)
                     link.ProbabilityPass(inputs[i + 1]);
-
-                Console.SetCursorPosition(fromLeft, fromTop);
-                Console.Write($"{count - i} ");
             }
 
             Console.WriteLine("completed.");
