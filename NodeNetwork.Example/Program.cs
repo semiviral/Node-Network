@@ -17,8 +17,8 @@ namespace NodeNetwork.Example {
 
         private static NodeNetwork<string> _network;
 
-        private static readonly Regex _RegexReplaceIllegal = new Regex(@"[^A-Za-z\.\?\!\;\:\(\)\[\]\-\ ]+");
-        private static readonly string[] _SplitBy = {".", "?", "!", ":", ";", "(", ")", "[", "]", "\n", "\r"};
+        //private static readonly Regex _RegexIllegal = new Regex(@"[^A-Za-z0-9\.\?\!\;\:\(\)\[\]\-\'\r\n\’\ ]+", RegexOptions.Compiled);
+        //private static readonly Regex _RegexSymbols = new Regex(@"[\.\?\!\:\;\(\)\[\]]+", RegexOptions.Compiled);
 
         private static readonly Stopwatch _Stopwatch = new Stopwatch();
 
@@ -43,32 +43,22 @@ namespace NodeNetwork.Example {
             Console.WriteLine($"{_Stopwatch.ElapsedMilliseconds}ms");
             _Stopwatch.Reset();
 
-            Console.Write("Initial refactoring pass: ");
+            Console.Write("Symbol to new-line replacement pass: ");
             _Stopwatch.Start();
-            string refactoredInput = _RegexReplaceIllegal.Replace(rawInput, " ");
+            string replacePunctuation = rawInput.OutstandSymbols();
             Console.WriteLine($"{_Stopwatch.ElapsedMilliseconds}ms");
             _Stopwatch.Reset();
 
-            Console.Write("Enumeration split pass: ");
+            Console.Write("New-line split pass: ");
             _Stopwatch.Start();
-            IEnumerable<string> enumerable = rawInput.ToEnumerable(_SplitBy);
-            Console.WriteLine($"{_Stopwatch.ElapsedMilliseconds}ms");
-            _Stopwatch.Reset();
-
-            Console.Write("Final cleansing pass: ");
-            _Stopwatch.Start();
-            IEnumerable<string> cleansedEnumerable = enumerable.CleanseConsecutiveSpaces();
+            List<string> splitByNewLines = replacePunctuation.Split(' ', '\r', '\n').ToList();
+            splitByNewLines.ToList().RemoveAll(string.IsNullOrEmpty);
             Console.WriteLine($"{_Stopwatch.ElapsedMilliseconds}ms");
             _Stopwatch.Reset();
 
             Console.WriteLine("Processing input list to create node network...");
             _Stopwatch.Start();
-
-            Stack<string> processingStack = new Stack<string>(cleansedEnumerable);
-
-            while (processingStack.Count > 0)
-                _network.ProcessInput(processingStack.Pop().Split(" "));
-
+            _network.ProcessInput(splitByNewLines.ToArray());
             Console.WriteLine($"Creation of node network completed: {_Stopwatch.ElapsedMilliseconds}ms");
             _Stopwatch.Reset();
 
@@ -83,31 +73,25 @@ namespace NodeNetwork.Example {
     }
 
     public static class Extensions {
-        /// <summary>
-        ///     Seperates a string into a list of strings by deliminators
-        /// </summary>
-        /// <param name="input"></param>
-        /// <param name="deliminators">characters to split from</param>
-        /// <returns></returns>
-        public static IEnumerable<string> ToEnumerable(this string input, string[] deliminators) {
-            int lastDeliminatorIndex = 0;
+        public static string OutstandSymbols(this string input) {
+            Regex alphanumeric = new Regex(@"[A-Za-z0-9 ]", RegexOptions.Compiled);
 
-            for (int i = 0; i < input.Length; i++)
-                if (deliminators.Contains(input[i].ToString())) {
-                    // this will retrieve the word from the input, and append a newline character
-                    string returnableString = $"{input.Substring(lastDeliminatorIndex, i - lastDeliminatorIndex)}";
+            StringBuilder output = new StringBuilder(input.Length * 2);
 
-                    if (string.IsNullOrEmpty(returnableString))
-                        continue;
+            foreach (char character in input)
+                if (alphanumeric.IsMatch(character.ToString()))
+                    output.Append(character);
+                else
+                    output.Append($" {character} ");
 
-                    yield return returnableString;
-
-                    lastDeliminatorIndex = i;
-                }
+            return output.ToString();
         }
 
         public static IEnumerable<string> CleanseConsecutiveSpaces(this IEnumerable<string> enumerable) {
             foreach (string str in enumerable) {
+                if (string.IsNullOrWhiteSpace(str))
+                    continue;
+
                 bool charWasSpace = false;
 
                 StringBuilder builder = new StringBuilder();
