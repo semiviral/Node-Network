@@ -1,4 +1,6 @@
-﻿namespace NodeNetwork {
+﻿using System.Diagnostics;
+
+namespace NodeNetwork {
     public class NodeLink<T> where T : class {
         public NodeLink(Node<T> input, Node<T> output) {
             Input = input;
