@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 #endregion
 
@@ -10,16 +11,12 @@ namespace NodeNetwork
 {
     public class NodeNetwork<T> where T : class
     {
-        #region MEMBERS
-
         public readonly Dictionary<T, Dictionary<T, NodeLink<T>>> Links;
-
-        #endregion
-
+      
         public NodeNetwork() => Links = new Dictionary<T, Dictionary<T, NodeLink<T>>>();
 
         /// <summary>
-        ///     Recieves input and abstracts to a neural blueprint
+        ///     Receives input and abstracts to a neural blueprint
         /// </summary>
         /// <param name="inputs">
         ///     input will be abstracted in order of bottom-to-
@@ -55,6 +52,8 @@ namespace NodeNetwork
                     {
                         link.ProbabilityPass(output);
                     }
+                    
+                    link.ProbabilityPass(output);
                 }
             }
 

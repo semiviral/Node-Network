@@ -29,13 +29,13 @@ namespace NodeNetwork.Example
 
             try
             {
-                if (File.Exists(@"config.json"))
+                if (File.Exists(@"config.json") && false)
                 {
                     _network = JsonConvert.DeserializeObject<NodeNetwork<string>>(File.ReadAllText(@"config.json"));
 
                     List<string> outputs = new List<string>
                     {
-                        "so"
+                        "i"
                     };
 
                     for (int i = 0; i < 10; i++)
@@ -66,30 +66,33 @@ namespace NodeNetwork.Example
             _network = new NodeNetwork<string>();
             _Stopwatch.Reset();
 
-            Console.Write("Reading text from training file: ");
-            _Stopwatch.Start();
-            string rawInput = File.ReadAllText($"{AppContext.BaseDirectory}\\TrainingFile.txt");
-            Console.WriteLine($"{_Stopwatch.ElapsedMilliseconds}ms");
-            _Stopwatch.Reset();
+            foreach (string filePath in Directory.GetFiles($@"{AppContext.BaseDirectory}\Training\", "*.txt"))
+            {
+                Console.Write("Reading text from training file: ");
+                _Stopwatch.Start();
+                string rawInput = File.ReadAllText(filePath);
+                Console.WriteLine($"{_Stopwatch.ElapsedMilliseconds}ms");
+                _Stopwatch.Reset();
 
-            Console.Write("Symbol to new-line replacement pass: ");
-            _Stopwatch.Start();
-            string replacePunctuation = rawInput.OutstandSymbols();
-            Console.WriteLine($"{_Stopwatch.ElapsedMilliseconds}ms");
-            _Stopwatch.Reset();
+                Console.Write("Symbol to new-line replacement pass: ");
+                _Stopwatch.Start();
+                string replacePunctuation = rawInput.OutstandSymbols();
+                Console.WriteLine($"{_Stopwatch.ElapsedMilliseconds}ms");
+                _Stopwatch.Reset();
 
-            Console.Write("New-line split pass: ");
-            _Stopwatch.Start();
-            List<string> splitByNewLines = replacePunctuation.Split(' ', '\r', '\n').ToList();
-            splitByNewLines.RemoveAll(string.IsNullOrWhiteSpace);
-            Console.WriteLine($"{_Stopwatch.ElapsedMilliseconds}ms");
-            _Stopwatch.Reset();
+                Console.Write("New-line split pass: ");
+                _Stopwatch.Start();
+                List<string> splitByNewLines = replacePunctuation.Split(' ', '\r', '\n').ToList();
+                splitByNewLines.RemoveAll(string.IsNullOrWhiteSpace);
+                Console.WriteLine($"{_Stopwatch.ElapsedMilliseconds}ms");
+                _Stopwatch.Reset();
 
-            Console.WriteLine("Processing input list to create node network...");
-            _Stopwatch.Start();
-            _network.ProcessInput(splitByNewLines);
-            Console.WriteLine($"Creation of node network completed: {_Stopwatch.ElapsedMilliseconds}ms");
-            _Stopwatch.Reset();
+                Console.WriteLine("Processing input list to create node network...");
+                _Stopwatch.Start();
+                _network.ProcessInput(splitByNewLines);
+                Console.WriteLine($"Creation of node network completed: {_Stopwatch.ElapsedMilliseconds}ms");
+                _Stopwatch.Reset();
+            }
 
             Console.Write("Writing serialized network to file: ");
             _Stopwatch.Start();
